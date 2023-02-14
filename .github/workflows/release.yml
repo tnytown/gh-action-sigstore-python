@@ -22,5 +22,5 @@ jobs:
         uses: ./
         id: sigstore-python
         with:
-          inputs: action.yml action.py ${{ env.GITHUB_REF_NAME }}.tar.gz
+          inputs: action.yml action.py ${{ github.ref_name }}.tar.gz
           release-signing-artifacts: true
