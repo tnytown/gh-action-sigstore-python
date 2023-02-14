@@ -56,8 +56,8 @@ def _log(msg):
 
 def _is_ref_asset(path):
     # Strip .tar.gz or .zip suffixes.
-    tag = re.sub(r"\.tar\.gz$|\.zip$", "", path)
-    if tag == path:
+    tag = re.sub(r"\.tar\.gz$|\.zip$", "", str(path))
+    if tag == str(path):
         return False
 
     return tag == os.getenv("GITHUB_REF_NAME")
@@ -70,8 +70,8 @@ def _download_ref_asset(path):
     curl_status = subprocess.run(
         ["curl",
          "-L",
-         "-o", path,
-         path],
+         "-o", str(path),
+         f"https://github.com/{os.getenv('GITHUB_REPOSITORY')}/archive/{path}"],
         text=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
