@@ -53,6 +53,32 @@ def _log(msg):
     print(msg, file=sys.stderr)
 
 
+def _is_ref_asset(path):
+    # Strip .tar.gz or .zip suffixes.
+    tag = re.sub(r"\.tar\.gz$|\.zip$", "", path)
+    if tag == path:
+        return False
+
+    return tag == os.getenv("GITHUB_REF_NAME")
+
+
+def _download_ref_asset(path):
+    # GitHub supports /:org/:repo/archive/:refspec<.tar.gz|.zip>.
+    # We've verified the refspec in _is_ref_asset, proceed to download.
+    # XX: will this work in Windows runners?
+    curl_status = subprocess.run(
+        ["curl",
+         "-L",
+         "-o", path,
+         path],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        # do not pass environment to curl
+    )
+    _debug(curl_status.stdout)
+
+
 def _sigstore_sign(global_args, sign_args):
     return ["python", "-m", "sigstore", *global_args, "sign", *sign_args]
 
@@ -174,6 +200,8 @@ for input_ in inputs:
     for file_ in files:
         if not file_.is_file():
             _fatal_help(f"input {file_} does not look like a file")
+        if _is_ref_asset(file_):
+            _download_ref_asset(file_)
         if "--certificate" not in sigstore_sign_args:
             signing_artifact_paths.append(f"{file_}.crt")
         if "--signature" not in sigstore_sign_args:
